@@ -12,10 +12,17 @@ def fonction_coût (X,y,theta):
 #--Algo gradient (reajustement des paramètres)--#
 
 def batch_gradient (X,y,theta, alpha) :
+     
     l = np.dot(np.transpose(X),(np.dot(X,theta) - y))
     grad = (1/X.shape[0])*l
     return theta - alpha*grad
 
+#--Coefficient de determination(pertinence du modèle)--#
+def coef_determination (y, prev):
+    u = ((y - prev)**2).sum()
+    v = ((y - y.mean())**2).sum()
+    return 1-(u/v)
+    
     
 #---Importation du fichier Excel---#
 house_data = pd.read_csv('house.csv')
@@ -31,10 +38,10 @@ y = np.array(house_data['loyer'])
 y = y.reshape(y.shape[0], 1)
 
 alpha = 0.0001
-epsilon = 0.01
+epsilon = 1
 e = 0
 iteration = 0
-E0 = 10
+
 
 #Paramètres générés aleatoirement 
 theta = np.random.rand(2,1)
@@ -42,26 +49,38 @@ theta = np.random.rand(2,1)
 #Calcul à l'iteration 0 de la fonction coût
 J = fonction_coût(X, y, theta)
 
+#courbe d'apprentissage
+cost_history= []
+cost_history.append(J)
+
 #---Demarage de l'algo: on cherche à faire converger la fonction coût vers sont minimun---#
 while (abs(J - e) > epsilon) :
-    iteration =+ 1
+    iteration += 1
     
     theta = batch_gradient (X,y,theta,alpha);
+    
     e = J
     J = fonction_coût(X, y, theta)
+    cost_history.append(J)
     #print (J-e)
 
+
+yprev = X.dot(theta)
+print(coef_determination(y, yprev))
+
 #---Affichage---#
-plt.plot(X[:, 1], y, 'ro', markersize=4)
-
-x_values = [np.min(X[:, 1]), np.max(X[:, 1])]
-y_values = theta[0] + theta[1] * x_values
-plt.plot(x_values, y_values, label='Regression Line')
-
+#Prevision du modèle
+plt.scatter(X[:,1], y)
+plt.plot(X[:,1], yprev, c='r', label='Regression Line')
 plt.xlabel('Surface')
 plt.ylabel('Loyer')
 plt.title('Régression linéaire avec descente de gradient')
-
 plt.legend()
 plt.show()
-    
+
+#Courbe d'apprentissage du modèle
+plt.plot(range(iteration+1), cost_history, label='Courbe d\'apprentissage')
+plt.xlabel('Iteration')
+plt.ylabel('L\'érreur')
+plt.title('Courbe d\'apprentissage du model')
+plt.show()
